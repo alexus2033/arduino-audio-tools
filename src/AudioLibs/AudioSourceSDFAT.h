@@ -125,7 +125,12 @@ public:
     file = new_file;
     return &file;
   }
-
+	
+  /// Move current position / skip some bytes forward or backward
+  void seek(int bytes){
+    file.seekCur(bytes);
+  }
+	
   /// Defines the regex filter criteria for selecting files. E.g. ".*Bob
   /// Dylan.*"
   void setFileFilter(const char *filter) { file_name_pattern = filter; }
