@@ -130,6 +130,16 @@ public:
   void seek(int bytes){
     file.seekCur(bytes);
   }
+
+  /// get current play position in percent
+  byte positionPercent(){
+    uint32_t size = file.fileSize();
+    uint32_t pos = file.curPosition();
+    if(size==0 || pos==0){
+      return 0;
+    }
+    return pos*100/size;
+  }
 	
   /// Defines the regex filter criteria for selecting files. E.g. ".*Bob
   /// Dylan.*"
