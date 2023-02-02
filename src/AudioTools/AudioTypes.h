@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include "AudioConfig.h"
 #include "AudioTools/AudioLogger.h"
 #include "AudioBasic/Int24.h"
@@ -173,6 +174,13 @@ class NumberConverter {
             return 32767;
         }
 
+        /// provides the biggest number for the indicated type
+        template <typename T> 
+        static int64_t maxValueT(){
+            // int24_t uses 4 bytes instead of 3!
+            return (std::is_same<T, int24_t>::value ) ? 8388607 : maxValue(sizeof(T)*8);
+        }
+
         template <typename T> 
         static T clip(float value){
             T mv = maxValue(sizeof(T)*8);
@@ -208,7 +216,7 @@ T readSample(Stream* p_stream){
 /// @param out_min 
 /// @param out_max 
 /// @return 
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+inline float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 

@@ -25,7 +25,7 @@ namespace audio_tools {
 class AudioPrint : public Print, public AudioBaseInfoDependent, public AudioBaseInfoSource {
     public:
         virtual ~AudioPrint() = default;
-        virtual size_t write(const uint8_t *buffer, size_t size) override = 0;
+         size_t write(const uint8_t *buffer, size_t size) override = 0;
 
         virtual size_t write(uint8_t ch) override {
             tmp[tmpPos++] = ch;
@@ -126,10 +126,11 @@ class CsvStream : public AudioPrint {
         }
 
         /// Starts the processing with the number of channels defined in AudioBaseInfo
-        void begin(AudioBaseInfo info){
+        bool begin(AudioBaseInfo info){
              TRACED();
             this->active = true;
             this->channels = info.channels;
+            return channels!=0;
         }
 
         /// Starts the processing with the defined number of channels 
@@ -162,7 +163,8 @@ class CsvStream : public AudioPrint {
             for (size_t j=0;j<lenChannels;j++){
                 for (int ch=0;ch<channels;ch++){
                     if (out_ptr!=nullptr && data_ptr!=nullptr){
-                        out_ptr->print(*data_ptr);
+                        int value = *data_ptr;
+                        out_ptr->print(value);
                     }
                     data_ptr++;
                     if (ch<channels-1) Serial.print(", ");
