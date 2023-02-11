@@ -64,7 +64,7 @@ struct AudioFFTConfig : public  AudioBaseInfo {
  */
 class FFTDriver {
     public:
-        virtual void begin(int len) =0;
+        virtual bool begin(int len) =0;
         virtual void end() =0;
         virtual void setValue(int pos, int value) =0;
         virtual void fft() = 0;
@@ -108,13 +108,19 @@ class AudioFFTBase : public AudioPrint {
                 // holds last N bytes that need to be reprocessed
                 stride_buffer.resize((cfg.length - cfg.stride)*bytesPerSample());
             }
-            p_driver->begin(cfg.length);
+            if (!p_driver->begin(cfg.length)){
+                LOGE("Not enough memory");
+            }
             if (cfg.window_function!=nullptr){
                 cfg.window_function->begin(length());
             }
 
             current_pos = 0;
             return p_driver->isValid();
+        }
+
+        operator bool() {
+            return p_driver!=nullptr && p_driver->isValid();
         }
 
         /// Notify change of audio information
@@ -214,7 +220,7 @@ class AudioFFTBase : public AudioPrint {
             }
             // find top n values
             AudioFFTResult act;
-            for (int j=1;j<size();j++){
+            for (int j=0;j<size();j++){
                 act.magnitude = magnitude(j);
                 act.bin = j;
                 act.frequency = frequency(j);
@@ -266,7 +272,7 @@ class AudioFFTBase : public AudioPrint {
         }
 
         /// Provides the actual configuration
-        AudioFFTConfig config() {
+        AudioFFTConfig &config() {
             return cfg;
         }
 
@@ -336,8 +342,10 @@ class AudioFFTBase : public AudioPrint {
 
         /// make sure that we do not reuse already found results
         template<int N>
-        bool insertSorted(AudioFFTResult(&result)[N], AudioFFTResult tmp){
+        void insertSorted(AudioFFTResult(&result)[N], AudioFFTResult tmp){
+            // find place where we need to insert new record
             for (int j=0;j<N;j++){
+                // insert when biggen then current record
                 if (tmp.magnitude>result[j].magnitude){
                     // shift existing values right
                     for (int i=N-2;i>=j;i--){
@@ -345,9 +353,10 @@ class AudioFFTBase : public AudioPrint {
                     }
                     // insert new value
                     result[j]=tmp;
+                    // stop after we found the correct index
+                    break;
                 }
             }
-            return true;
         }
 
         void writeStrideBuffer(uint8_t* buffer, size_t len){

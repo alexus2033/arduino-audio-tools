@@ -19,7 +19,7 @@ namespace audio_tools {
  */
 class FFTDriverEspressifFFT : public FFTDriver {
     public:
-        void begin(int len) override {
+        bool begin(int len) override {
             N = len;
             if (p_data==nullptr){
                 p_data = new float[len*2];
@@ -27,10 +27,12 @@ class FFTDriverEspressifFFT : public FFTDriver {
                     LOGE("not enough memory");
                 }
             }
+            assert(p_data!=nullptr);
             ret = dsps_fft2r_init_fc32(NULL, CONFIG_DSP_MAX_FFT_SIZE);
             if (ret  != ESP_OK){
                 LOGE("dsps_fft2r_init_fc32 %d", ret);
             }
+            return p_data!=nullptr && ret == ESP_OK;
         }
 
         void end() override {
